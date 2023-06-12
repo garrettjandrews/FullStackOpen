@@ -1,5 +1,30 @@
 import { useEffect, useState } from 'react'
 import personService from "./services/persons"
+import "./index.css"
+
+const Header = ({successMessage, errorMessage}) => {
+  if (successMessage) {
+    return(
+      <div>
+        <h2>Phonebook</h2>
+        <p className = "successful-action">{successMessage}</p>
+      </div>
+    )
+  }
+  if (errorMessage) {
+    return(
+      <div>
+        <h2>Phonebook</h2>
+        <p className = "failed-action">{errorMessage}</p>
+      </div>
+    )
+  }
+  return(
+    <div>
+      <h2>Phonebook</h2>
+    </div>
+  )
+}
 
 const Entry = ({persons, person, filter, setPersons}) => {
   const deleteEntry = () => {
@@ -42,7 +67,7 @@ const Filter = ({filter, setNewFilter}) => {
   )
 }
 
-const InputForm = ({newName, newNumber, setNewName, setNewNumber, persons, setPersons}) => {
+const InputForm = ({newName, newNumber, setNewName, setNewNumber, persons, setPersons, setSuccessMessage, setErrorMessage}) => {
   const handleChange = (event) => {
     setNewName(event.target.value)
   }
@@ -66,6 +91,16 @@ const InputForm = ({newName, newNumber, setNewName, setNewNumber, persons, setPe
           console.log(response)
           setPersons(persons.map(thisPerson => thisPerson.id !== personToUpdate.id ? thisPerson : response.data))
         })
+        .then(setSuccessMessage(`Successfully updated ${newEntry.name}'s number to ${newEntry.number}.`))
+        .catch(() => {
+          setErrorMessage(`Information for ${newEntry.name} was already deleted.`)
+          setTimeout(() => {
+            setErrorMessage(null)
+          }, 3000)
+        })
+        setTimeout(() => {
+          setSuccessMessage(null)
+        }, 3000)
       }
       return
     }
@@ -73,10 +108,14 @@ const InputForm = ({newName, newNumber, setNewName, setNewNumber, persons, setPe
     // upload new entry to server
     personService
     .create(newEntry)
-      .then(response => {
-        console.log(response)
-        setPersons(persons.concat(response.data))
-      })
+    .then(response => {
+      console.log(response)
+      setPersons(persons.concat(response.data))
+    })
+    .then(setSuccessMessage(`Successfully added ${newEntry.name}.`))
+    setTimeout(() => {
+      setSuccessMessage(null)
+    }, 3000)
 
     setNewName('')
     setNewNumber('')
@@ -103,6 +142,8 @@ const App = () => {
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [filter, setNewFilter] = useState('')
+  const [successMessage, setSuccessMessage] = useState(null)
+  const [errorMessage, setErrorMessage] = useState(null)
 
   useEffect(() => {
     personService.getAll()
@@ -113,7 +154,7 @@ const App = () => {
 
   return (
     <div>
-      <h2>Phonebook</h2>
+      <Header successMessage={successMessage} errorMessage = {errorMessage}/>
       <Filter 
       filter = {filter} 
       setNewFilter = {setNewFilter}
@@ -125,6 +166,8 @@ const App = () => {
       setNewNumber = {setNewNumber}
       persons = {persons}
       setPersons = {setPersons}
+      successMessage = {successMessage} setSuccessMessage = {setSuccessMessage}
+      setErrorMessage = {setErrorMessage}
       />
       <NumbersDisplay persons = {persons} filter = {filter} setPersons = {setPersons}/>
     </div>
