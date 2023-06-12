@@ -1,19 +1,30 @@
 import { useEffect, useState } from 'react'
-import axios from 'axios'
+import personService from "./services/persons"
 
-const Entry = ({person, filter}) => {
+const Entry = ({persons, person, filter, setPersons}) => {
+  const deleteEntry = () => {
+    if (window.confirm(`Delete ${person.name}?`)) {
+      personService.deleteEntry(person.id)
+    }
+
+    setPersons(persons.filter(thisPerson => thisPerson.id != person.id))
+  }
+
   if (person.name.toLowerCase().includes(filter.toLowerCase())) {
     return (
-      <p>{person.name} {person.number}</p>
+      <div>
+        {person.name} {person.number}   
+        <button onClick = {deleteEntry}>delete</button>
+      </div>
     )
   }
 }
 
-const NumbersDisplay = ({persons, filter}) => {
+const NumbersDisplay = ({persons, filter, setPersons}) => {
   return (
     <div>
       <h2>Numbers</h2>
-      {persons.map(person => <Entry person = {person} key = {person.name} filter = {filter}/>)}
+      {persons.map(person => <Entry persons = {persons} person = {person} key = {person.id} filter = {filter} setPersons = {setPersons}/>)}
     </div>
   )
 }
@@ -43,15 +54,29 @@ const InputForm = ({newName, newNumber, setNewName, setNewNumber, persons, setPe
   const addEntry = (event) => {
     event.preventDefault()
     const newEntry = {name: newName, number:newNumber}
-    const newPersons = persons.concat(newEntry)
 
     // check for existing entry before continuing
     if (persons.some(entry => entry.name === newName)) {
-      alert (`${newName} is already added to phonebook`)
+      let personToUpdate = persons.filter(e => e.name === newName)[0]
+      newEntry.id = personToUpdate.id
+      if (window.confirm(`Would you like to update ${personToUpdate.name}?`)) {
+        personService
+        .update(personToUpdate.id, newEntry)
+        .then(response => {
+          console.log(response)
+          setPersons(persons.map(thisPerson => thisPerson.id !== personToUpdate.id ? thisPerson : response.data))
+        })
+      }
       return
     }
 
-    setPersons(newPersons)
+    // upload new entry to server
+    personService
+    .create(newEntry)
+      .then(response => {
+        console.log(response)
+        setPersons(persons.concat(response.data))
+      })
 
     setNewName('')
     setNewNumber('')
@@ -80,8 +105,8 @@ const App = () => {
   const [filter, setNewFilter] = useState('')
 
   useEffect(() => {
-    axios
-      .get('http://localhost:3001/persons').then(response => {
+    personService.getAll()
+    .then(response => {
         setPersons(response.data)
       })
   }, [])
@@ -101,7 +126,7 @@ const App = () => {
       persons = {persons}
       setPersons = {setPersons}
       />
-      <NumbersDisplay persons = {persons} filter = {filter}/>
+      <NumbersDisplay persons = {persons} filter = {filter} setPersons = {setPersons}/>
     </div>
   )
 }
