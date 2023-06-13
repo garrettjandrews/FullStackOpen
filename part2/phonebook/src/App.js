@@ -32,7 +32,7 @@ const Entry = ({persons, person, filter, setPersons}) => {
       personService.deleteEntry(person.id)
     }
 
-    setPersons(persons.filter(thisPerson => thisPerson.id != person.id))
+    setPersons(persons.filter(thisPerson => thisPerson.id !== person.id))
   }
 
   if (person.name.toLowerCase().includes(filter.toLowerCase())) {
