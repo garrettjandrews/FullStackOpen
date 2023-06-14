@@ -84,6 +84,8 @@ const InputForm = ({newName, newNumber, setNewName, setNewNumber, persons, setPe
     if (persons.some(entry => entry.name === newName)) {
       let personToUpdate = persons.filter(e => e.name === newName)[0]
       newEntry.id = personToUpdate.id
+
+      // if user decides to update, then execute this block
       if (window.confirm(`Would you like to update ${personToUpdate.name}?`)) {
         personService
         .update(personToUpdate.id, newEntry)
@@ -109,10 +111,12 @@ const InputForm = ({newName, newNumber, setNewName, setNewNumber, persons, setPe
     personService
     .create(newEntry)
     .then(response => {
-      console.log(response)
       setPersons(persons.concat(response.data))
     })
     .then(setSuccessMessage(`Successfully added ${newEntry.name}.`))
+    .catch(error => {
+      console.log(error.response.data.error)
+    })
     setTimeout(() => {
       setSuccessMessage(null)
     }, 3000)
