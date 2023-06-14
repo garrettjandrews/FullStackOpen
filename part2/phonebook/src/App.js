@@ -112,14 +112,18 @@ const InputForm = ({newName, newNumber, setNewName, setNewNumber, persons, setPe
     .create(newEntry)
     .then(response => {
       setPersons(persons.concat(response.data))
+      setSuccessMessage(`Successfully added ${newEntry.name}.`)
+      setTimeout(() => {
+        setSuccessMessage(null)
+      }, 3000)
     })
-    .then(setSuccessMessage(`Successfully added ${newEntry.name}.`))
     .catch(error => {
       console.log(error.response.data.error)
+      setErrorMessage(error.response.data.error)
+      setTimeout(() => {
+        setErrorMessage(null)
+      }, 3000)
     })
-    setTimeout(() => {
-      setSuccessMessage(null)
-    }, 3000)
 
     setNewName('')
     setNewNumber('')
